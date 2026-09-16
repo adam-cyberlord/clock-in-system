@@ -1,0 +1,9 @@
+Attempting insert with clock_in_id: OT-9QFXVI48
+✅ Success!
+clock_in_id = OT-9QFXVI48
+{
+  "id": "76ad11ad-4e44-4f10-94af-02db48a1ea48",
+  "full_name": "Test Student",
+  "clock_in_id": "OT-9QFXVI48",
+  "email": "test1788812638193@oasis.com"
+}

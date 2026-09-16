@@ -17,6 +17,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "nanoid": "^3.3.19",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

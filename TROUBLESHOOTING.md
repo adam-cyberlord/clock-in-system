@@ -242,11 +242,10 @@ const API_BASE_URL = 'https://your-api-domain.com/api';
 **Error:** `Too many requests, please slow down`
 
 **Solution:**
-- This is intentional for security
-- Default: 100 requests per 15 minutes per IP
-- Auth endpoints: 20 requests per 15 minutes
-- Just wait 15 minutes for limit to reset
-- Or restart server (development only)
+- The API limiter now ignores frontend assets, so loading the website does not consume the API request budget.
+- Development mode allows 300 API requests per 15 minutes and 60 authentication attempts per 15 minutes per IP.
+- Production mode uses 100 API requests and 20 authentication attempts per 15 minutes per IP.
+- Restart the server after changing the limiter configuration. Existing counters reset when the process restarts.
 
 ---
 

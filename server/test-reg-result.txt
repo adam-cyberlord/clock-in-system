@@ -1,0 +1,8 @@
+
+[1] Register test student
+    Status: 500
+    Body: {
+  "error": "Registration failed. Please try again."
+}
+
+    ❌ Registration failed

@@ -41,16 +41,43 @@ CREATE TABLE IF NOT EXISTS students (
 -- TABLE: locations
 -- ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS locations (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name        VARCHAR(255) NOT NULL,
-  address     TEXT,
-  latitude    DECIMAL(10, 7),
-  longitude   DECIMAL(10, 7),
-  created_by  UUID REFERENCES admins(id),
-  is_active   BOOLEAN DEFAULT true,
-  created_at  TIMESTAMPTZ DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ DEFAULT NOW()
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name             VARCHAR(255) NOT NULL,
+  address          TEXT,
+  latitude         DECIMAL(10, 7),
+  longitude        DECIMAL(10, 7),
+  geofence_radius  DECIMAL(8, 2) DEFAULT 50.00,  -- metres fallback (circular)
+  width_m          DECIMAL(8, 2) DEFAULT 0,       -- venue east-west width in metres
+  length_m         DECIMAL(8, 2) DEFAULT 0,       -- venue north-south length in metres
+  created_by       UUID REFERENCES admins(id),
+  is_active        BOOLEAN DEFAULT true,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Safe upgrade for existing databases
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS width_m  DECIMAL(8,2) DEFAULT 0;
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS length_m DECIMAL(8,2) DEFAULT 0;
+
+-- ───────────────────────────────────────────────────────────────
+-- TABLE: attendance_sessions
+-- Admin opens a session for a venue; students can only clock in
+-- while a session is active for today.
+-- ───────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS attendance_sessions (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  location_id  UUID REFERENCES locations(id) ON DELETE CASCADE,
+  session_date DATE NOT NULL,
+  opened_by    UUID REFERENCES admins(id),
+  is_active    BOOLEAN DEFAULT true,
+  opened_at    TIMESTAMPTZ DEFAULT NOW(),
+  closed_at    TIMESTAMPTZ,
+  note         TEXT,
+  UNIQUE (session_date)   -- only one session per day
+);
+
+-- Safe upgrade: add index for fast daily lookup
+CREATE INDEX IF NOT EXISTS idx_sessions_date_active ON attendance_sessions(session_date, is_active);
 
 -- ───────────────────────────────────────────────────────────────
 -- TABLE: qr_codes

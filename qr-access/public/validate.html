@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Scan QR Code — Oasis Pulse</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#060d1c;--card:#0d1829;--border:#1e2d45;
+      --blue:#2563eb;--blue-mid:#3b82f6;--blue-glow:rgba(37,99,235,.35);
+      --text:#f1f5f9;--muted:#64748b;
+      --success:#10b981;--danger:#ef4444;
+    }
+    body{
+      font-family:'Inter',system-ui,sans-serif;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* ── Animated background ── */
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+    .bg-orb{position:absolute;border-radius:50%;filter:blur(100px);}
+    .bg-orb:nth-child(1){width:500px;height:500px;background:rgba(37,99,235,.14);top:-180px;left:-120px;}
+    .bg-orb:nth-child(2){width:400px;height:400px;background:rgba(59,130,246,.09);bottom:-100px;right:-80px;}
+    .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);background-size:52px 52px;}
+
+    /* ── Layout ── */
+    .page{
+      position:relative;z-index:1;
+      min-height:100vh;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:1.5rem;
+    }
+
+    /* ── Header ── */
+    .header{
+      display:flex;align-items:center;justify-content:space-between;
+      width:100%;max-width:480px;margin-bottom:1.5rem;
+    }
+    .back-btn{
+      display:inline-flex;align-items:center;gap:.4rem;
+      color:var(--muted);font-size:.82rem;font-weight:500;
+      text-decoration:none;transition:color .2s;
+      background:none;border:none;cursor:pointer;font-family:inherit;
+      padding:.4rem;border-radius:8px;
+    }
+    .back-btn:hover{color:var(--text);}
+    .back-btn svg{width:16px;height:16px;}
+    .header-brand{font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.04em;}
+
+    /* ── Main card ── */
+    .card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:28px;width:100%;max-width:480px;
+      overflow:hidden;
+      box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(59,130,246,.06) inset;
+    }
+
+    /* ── Camera viewport ── */
+    .camera-wrap{
+      position:relative;width:100%;aspect-ratio:1;
+      background:#020810;overflow:hidden;
+    }
+    #qr-video{
+      width:100%;height:100%;object-fit:cover;
+      display:block;
+      /* mirror on front camera */
+    }
+    .cam-placeholder{
+      position:absolute;inset:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:1rem;color:var(--muted);text-align:center;padding:2rem;
+      background:linear-gradient(135deg,#020810,#05112b);
+    }
+    .cam-placeholder svg{width:60px;height:60px;color:#1e3a5f;}
+    .cam-placeholder p{font-size:.88rem;line-height:1.5;}
+    .cam-placeholder strong{color:var(--text);display:block;font-size:1rem;margin-bottom:.25rem;}
+
+    /* Corner guides */
+    .corner{position:absolute;width:40px;height:40px;pointer-events:none;}
+    .corner-tl{top:20px;left:20px;border-top:3px solid var(--blue-mid);border-left:3px solid var(--blue-mid);border-radius:4px 0 0 0;}
+    .corner-tr{top:20px;right:20px;border-top:3px solid var(--blue-mid);border-right:3px solid var(--blue-mid);border-radius:0 4px 0 0;}
+    .corner-bl{bottom:20px;left:20px;border-bottom:3px solid var(--blue-mid);border-left:3px solid var(--blue-mid);border-radius:0 0 0 4px;}
+    .corner-br{bottom:20px;right:20px;border-bottom:3px solid var(--blue-mid);border-right:3px solid var(--blue-mid);border-radius:0 0 4px 0;}
+
+    /* Scan line */
+    .scan-line{
+      position:absolute;left:20px;right:20px;height:2px;
+      background:linear-gradient(90deg,transparent,var(--blue-mid),transparent);
+      top:20%;
+      display:none;
+      animation:scanAnim 2.2s ease-in-out infinite;
+    }
+    @keyframes scanAnim{0%{top:18%}50%{top:82%}100%{top:18%}}
+    .scan-line.active{display:block;}
+
+    /* Scan status overlay */
+    .cam-status{
+      position:absolute;bottom:0;left:0;right:0;
+      padding:.75rem;text-align:center;
+      background:linear-gradient(transparent,rgba(2,8,16,.85));
+      font-size:.78rem;font-weight:600;color:rgba(255,255,255,.6);
+    }
+    .cam-status.scanning{color:var(--blue-mid);}
+
+    /* ── Bottom panel ── */
+    .bottom{padding:1.5rem 1.75rem;}
+
+    .cam-controls{display:flex;gap:.65rem;margin-bottom:1.25rem;}
+    .btn-cam{
+      flex:1;padding:.72rem;border-radius:11px;
+      font-size:.82rem;font-weight:700;cursor:pointer;
+      border:1.5px solid transparent;font-family:inherit;
+      display:flex;align-items:center;justify-content:center;gap:.4rem;
+      transition:all .2s;
+    }
+    .btn-cam svg{width:15px;height:15px;flex-shrink:0;}
+    .btn-cam-primary{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 3px 12px var(--blue-glow);}
+    .btn-cam-primary:hover:not(:disabled){background:#1d4ed8;transform:translateY(-1px);}
+    .btn-cam-ghost{background:transparent;color:var(--muted);border-color:var(--border);}
+    .btn-cam-ghost:hover:not(:disabled){background:rgba(255,255,255,.04);color:var(--text);}
+    .btn-cam:disabled{opacity:.38;cursor:not-allowed;transform:none!important;}
+
+    /* Divider */
+    .divider{display:flex;align-items:center;gap:.65rem;color:var(--muted);font-size:.75rem;margin-bottom:1.25rem;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* Manual input */
+    .manual-wrap{position:relative;margin-bottom:1rem;}
+    .manual-input{
+      width:100%;padding:.82rem 1rem .82rem 2.75rem;
+      background:#07111f;border:1.5px solid var(--border);
+      border-radius:11px;font-size:.9rem;
+      font-family:'JetBrains Mono',monospace;
+      color:var(--text);outline:none;
+      transition:border-color .18s,box-shadow .18s;
+      letter-spacing:.04em;
+    }
+    .manual-input::placeholder{color:#273548;letter-spacing:0;font-family:inherit;font-size:.85rem;}
+    .manual-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+    .manual-icon{
+      position:absolute;left:.9rem;top:50%;transform:translateY(-50%);
+      color:var(--muted);pointer-events:none;
+    }
+    .manual-icon svg{width:16px;height:16px;display:block;}
+
+    /* Validate button */
+    .btn-validate{
+      width:100%;padding:.95rem 1.25rem;border-radius:13px;
+      font-size:.97rem;font-weight:700;cursor:pointer;
+      background:linear-gradient(135deg,var(--blue),var(--blue-mid));
+      color:#fff;border:none;font-family:inherit;
+      box-shadow:0 5px 22px var(--blue-glow);
+      transition:all .22s;
+      display:flex;align-items:center;justify-content:center;gap:.55rem;
+    }
+    .btn-validate:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 36px rgba(37,99,235,.6);}
+    .btn-validate:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .btn-validate svg{width:19px;height:19px;flex-shrink:0;}
+    .spinner{width:19px;height:19px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Result */
+    .result{
+      display:none;border-radius:13px;padding:1rem 1.1rem;
+      margin-top:1rem;font-size:.88rem;font-weight:500;
+      align-items:flex-start;gap:.65rem;line-height:1.5;
+    }
+    .result.show{display:flex;}
+    .result-success{background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.3);color:#6ee7b7;}
+    .result-error  {background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);color:#fca5a5;}
+    .result-icon{flex-shrink:0;margin-top:.1rem;}
+    .result-icon svg{width:18px;height:18px;}
+    .result strong{display:block;margin-bottom:.2rem;font-size:.92rem;}
+
+    /* Success overlay */
+    .success-overlay{
+      position:fixed;inset:0;z-index:100;
+      background:rgba(6,13,28,.92);backdrop-filter:blur(12px);
+      display:none;flex-direction:column;
+      align-items:center;justify-content:center;
+      text-align:center;padding:2rem;
+      animation:fadeIn .35s ease;
+    }
+    .success-overlay.show{display:flex;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .success-circle{
+      width:100px;height:100px;border-radius:50%;
+      background:linear-gradient(135deg,rgba(16,185,129,.3),rgba(5,150,105,.2));
+      border:2px solid rgba(16,185,129,.5);
+      display:flex;align-items:center;justify-content:center;
+      margin-bottom:1.75rem;
+      box-shadow:0 0 60px rgba(16,185,129,.4);
+      animation:successPulse .5s ease .2s both;
+    }
+    @keyframes successPulse{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+    .success-circle svg{width:50px;height:50px;color:#34d399;}
+    .success-title{font-size:1.6rem;font-weight:900;color:#f0fdf4;margin-bottom:.5rem;}
+    .success-sub{font-size:.95rem;color:rgba(110,231,183,.7);margin-bottom:1.5rem;}
+    .success-redirect{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;justify-content:center;}
+    .redirect-bar{
+      width:140px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-top:.75rem;
+    }
+    .redirect-fill{height:100%;background:var(--success);border-radius:2px;width:0%;transition:width 1.3s linear;}
+  </style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-circle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="success-title">Access Granted!</div>
+  <div class="success-sub" id="success-sub">Redirecting you…</div>
+  <div class="success-redirect">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+    Taking you there now
+  </div>
+  <div class="redirect-bar"><div class="redirect-fill" id="redirect-fill"></div></div>
+</div>
+
+<div class="page">
+
+  <div class="header">
+    <a href="gate.html" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </a>
+    <div class="header-brand">OASIS PULSE</div>
+  </div>
+
+  <div class="card">
+
+    <!-- Camera area -->
+    <div class="camera-wrap">
+      <div class="cam-placeholder" id="cam-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <p><strong>Camera ready</strong>Tap "Start Camera" below to scan<br/>your QR code automatically</p>
+      </div>
+      <video id="qr-video" autoplay playsinline muted></video>
+
+      <!-- Corner guides (shown when camera active) -->
+      <div class="corner corner-tl" id="corners" style="display:none;"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="scan-line" id="scan-line"></div>
+
+      <div class="cam-status" id="cam-status">Point your camera at a QR code</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="bottom">
+      <div class="cam-controls">
+        <button class="btn-cam btn-cam-primary" id="start-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Start Camera
+        </button>
+        <button class="btn-cam btn-cam-ghost" id="stop-btn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop
+        </button>
+        <button class="btn-cam btn-cam-ghost" id="flip-btn" disabled title="Switch camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </button>
+      </div>
+
+      <div class="divider">or enter code manually</div>
+
+      <div class="manual-wrap">
+        <span class="manual-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
+        <input type="text" id="code-input" class="manual-input"
+               placeholder="Paste your invitation code…"
+               autocomplete="off" spellcheck="false"
+               inputmode="text"/>
+      </div>
+
+      <button class="btn-validate" id="validate-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Validate &amp; Enter
+      </button>
+
+      <div class="result" id="result">
+        <span class="result-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="result-svg"></svg></span>
+        <div id="result-text"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+'use strict';
+
+// Skip if already have valid session
+const existing = QR_CONFIG.parseSession(sessionStorage.getItem('qr_session'));
+if (existing) location.href = existing.redirect_to === 'login' ? 'login.html' : 'register.html';
+
+// Auto-fill from URL ?code=
+const urlCode = new URLSearchParams(location.search).get('code');
+if (urlCode) {
+  document.getElementById('code-input').value = urlCode;
+  // auto-validate immediately if code came from URL
+  setTimeout(() => validate(urlCode), 400);
+}
+
+/* ── Camera ─────────────────────────────────────────────────── */
+let stream = null, scanning = false, canvas, ctx;
+let facingMode = 'environment'; // rear by default, flip to user for laptops
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 1280 } }
+    });
+    const v = document.getElementById('qr-video');
+    v.srcObject = stream;
+    await v.play();
+
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('scan-line').classList.add('active');
+    document.querySelectorAll('.corner').forEach(c => c.style.display = 'block');
+    document.getElementById('cam-status').textContent = '🔍 Scanning for QR code…';
+    document.getElementById('cam-status').className = 'cam-status scanning';
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('stop-btn').disabled  = false;
+    document.getElementById('flip-btn').disabled  = false;
+
+    canvas = document.createElement('canvas');
+    ctx    = canvas.getContext('2d', { willReadFrequently: true });
+    scanning = true;
+    requestAnimationFrame(tick);
+  } catch (err) {
+    // Camera denied — show manual entry hint
+    const msg = err.name === 'NotAllowedError'
+      ? 'Camera access denied. Please allow camera access in your browser settings, or paste your code manually below.'
+      : 'Camera unavailable. Please paste your invitation code manually below.';
+    showResult('error', 'Camera blocked', msg);
+  }
+}
+
+function stopCamera() {
+  scanning = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  const v = document.getElementById('qr-video');
+  v.srcObject = null;
+  document.getElementById('cam-placeholder').style.display = 'flex';
+  document.getElementById('scan-line').classList.remove('active');
+  document.querySelectorAll('.corner').forEach(c => c.style.display = 'none');
+  document.getElementById('cam-status').textContent = 'Point your camera at a QR code';
+  document.getElementById('cam-status').className   = 'cam-status';
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('stop-btn').disabled  = true;
+  document.getElementById('flip-btn').disabled  = true;
+}
+
+function tick() {
+  if (!scanning) return;
+  const v = document.getElementById('qr-video');
+  if (v.readyState === v.HAVE_ENOUGH_DATA) {
+    canvas.width  = v.videoWidth;
+    canvas.height = v.videoHeight;
+    ctx.drawImage(v, 0, 0);
+    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code) {
+      stopCamera();
+      let extracted = code.data.trim();
+      try {
+        const u = new URL(code.data);
+        extracted = u.searchParams.get('code') || code.data;
+      } catch {}
+      document.getElementById('code-input').value = extracted;
+      validate(extracted);
+      return;
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+document.getElementById('start-btn').addEventListener('click', startCamera);
+document.getElementById('stop-btn').addEventListener('click', stopCamera);
+document.getElementById('flip-btn').addEventListener('click', () => {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  stopCamera();
+  startCamera();
+});
+
+/* ── Validate ───────────────────────────────────────────────── */
+document.getElementById('validate-btn').addEventListener('click', () => {
+  const code = document.getElementById('code-input').value.trim();
+  if (!code) { showResult('error', 'No code', 'Scan a QR code or paste your invitation code below.'); return; }
+  validate(code);
+});
+
+document.getElementById('code-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const code = document.getElementById('code-input').value.trim();
+    if (code) validate(code);
+  }
+});
+
+async function validate(code) {
+  const btn = document.getElementById('validate-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>&nbsp;Checking…';
+  clearResult();
+
+  try {
+    const res  = await fetch(`${QR_CONFIG.apiBase}/qr/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      sessionStorage.setItem('qr_session', data.session_token);
+      showSuccess(data.redirect_to);
+    } else {
+      const msgs = {
+        expired: 'This QR code has expired. Please request a new one from your administrator.',
+        revoked: 'This QR code has been revoked by the administrator.',
+        used_up: 'This QR code has already been used the maximum number of times.',
+        invalid: 'Code not recognised. Check for typos or request a new QR code.'
+      };
+      showResult('error', 'Access denied', msgs[data.reason] || 'This invitation code is not valid.');
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg> Validate &amp; Enter`;
+    }
+  } catch {
+    showResult('error', 'Connection error', 'Could not reach the server. Check your internet connection and try again.');
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg> Validate &amp; Enter`;
+  }
+}
+
+/* ── Success overlay ─────────────────────────────────────────── */
+function showSuccess(redirectTo) {
+  const dest    = redirectTo === 'login' ? 'login.html' : 'register.html';
+  const label   = redirectTo === 'login' ? 'sign in' : 'registration';
+  const overlay = document.getElementById('success-overlay');
+  document.getElementById('success-sub').textContent = `Taking you to ${label}…`;
+  overlay.classList.add('show');
+  // Animate progress bar then redirect
+  setTimeout(() => {
+    document.getElementById('redirect-fill').style.width = '100%';
+  }, 50);
+  setTimeout(() => { location.href = dest; }, 1500);
+}
+
+/* ── Result helpers ──────────────────────────────────────────── */
+function showResult(type, title, body) {
+  const el  = document.getElementById('result');
+  const svg = document.getElementById('result-svg');
+  el.className = `result show result-${type}`;
+  svg.innerHTML = type === 'error'
+    ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+    : '<polyline points="20 6 9 17 4 12"/>';
+  document.getElementById('result-text').innerHTML = `<strong>${title}</strong>${body}`;
+}
+function clearResult() {
+  const el = document.getElementById('result');
+  el.className = 'result';
+  el.innerHTML = '';
+}
+
+// Auto-start camera when page loads (user came from "Open Camera" button on gate)
+// Only auto-start if coming from gate (referrer check)
+if (document.referrer.includes('gate.html') || urlCode === null) {
+  startCamera();
+}
+</script>
+</body>
+</html>

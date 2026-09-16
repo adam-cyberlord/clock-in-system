@@ -1,4 +1,4 @@
-# 🕒 Oasis TimeMark — Project Specification
+# 🕒 NAUB TimeMark — Project Specification
 
 > **Version:** 1.2.0
 > **Last Updated:** September 3, 2026
@@ -26,7 +26,7 @@
 
 ## 1. Project Overview
 
-**Oasis TimeMark** is a web-based attendance management system built for student IT interns at Sandlip Oasis.
+**NAUB TimeMark** is a web-based attendance management system built for student IT interns at Sandlip Oasis.
 
 Students can mark their attendance by either:
 - **Scanning a QR code** at the designated location, OR

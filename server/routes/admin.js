@@ -5,6 +5,10 @@ const {
   createLocation,
   updateLocation,
   getLocations,
+  openSession,
+  closeSession,
+  getTodaySession,
+  getActiveSession,
   generateDailyQR,
   getTodayQR,
   getAllStudents,
@@ -21,17 +25,22 @@ router.use(requireAuth, requireAdmin);
 router.get('/stats', getDashboardStats);
 
 // Locations
-router.get('/locations',     getLocations);
-router.post('/locations',    createLocation);
+router.get('/locations',       getLocations);
+router.post('/locations',      createLocation);
 router.patch('/locations/:id', updateLocation);
+
+// Sessions (admin-authenticated)
+router.post('/session/open',   openSession);
+router.post('/session/close',  closeSession);
+router.get('/session/today',   getTodaySession);
 
 // QR Codes
 router.post('/qr/generate', generateDailyQR);
 router.get('/qr/today',     getTodayQR);
 
 // Students
-router.get('/students',         getAllStudents);
-router.patch('/students/:id',   toggleStudentStatus);
+router.get('/students',        getAllStudents);
+router.patch('/students/:id',  toggleStudentStatus);
 
 // Working days
 router.get('/working-days',    getWorkingDays);

@@ -1,285 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Oasis Pulse — Register</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
-    body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); min-height: 100vh; }
-
-    .reg-page {
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; padding: 2rem; position: relative; overflow: hidden;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#3b82f6;
+      --primary-pale:#eff6ff;--primary-ring:rgba(37,99,235,.18);
+      --surface:#fff;--surface-2:#f8fafc;--border:#e2e8f0;
+      --text-1:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+      --success:#059669;--danger:#dc2626;
+      --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
     }
+    body{font-family:var(--font);background:linear-gradient(135deg,#f0f7ff 0%,#e8f0fe 50%,#f0f4ff 100%);min-height:100vh;-webkit-font-smoothing:antialiased;}
 
-    /* Floating orbs */
-    .orb {
-      position: fixed; border-radius: 50%; filter: blur(80px);
-      pointer-events: none; z-index: 0;
+    /* ── Layout ── */
+    .page{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+    @media(max-width:860px){.page{grid-template-columns:1fr;}.hero{display:none;}}
+
+    /* ── Hero ── */
+    .hero{
+      background:linear-gradient(160deg,var(--primary-dark) 0%,var(--primary) 60%,#1e40af 100%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:3rem 2.5rem;position:relative;overflow:hidden;
     }
-    .orb-1 { width: 500px; height: 500px; background: rgba(99,102,241,.25); top: -200px; right: -100px; animation: orbDrift 12s ease-in-out infinite; }
-    .orb-2 { width: 400px; height: 400px; background: rgba(16,185,129,.2);  bottom: -150px; left: -100px; animation: orbDrift 15s ease-in-out infinite reverse; }
-    .orb-3 { width: 300px; height: 300px; background: rgba(236,72,153,.15); top: 40%; left: 40%; animation: orbDrift 10s ease-in-out infinite 3s; }
-    @keyframes orbDrift { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(40px,-40px) scale(1.1)} }
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(255,255,255,.08) 0%,transparent 60%);}
+    .hero-grid{position:absolute;inset:0;pointer-events:none;
+      background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+      background-size:40px 40px;}
+    .hero-inner{position:relative;z-index:1;max-width:380px;text-align:center;}
+    .hero-icon{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.75rem;backdrop-filter:blur(8px);}
+    .hero-icon svg{width:36px;height:36px;color:white;}
+    .hero-title{font-size:1.9rem;font-weight:800;color:white;line-height:1.2;margin-bottom:.75rem;}
+    .hero-sub{font-size:.92rem;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:2.5rem;}
+    .hero-steps{display:flex;flex-direction:column;gap:.75rem;text-align:left;}
+    .hero-step{display:flex;align-items:flex-start;gap:.875rem;}
+    .hero-step-num{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:white;}
+    .hero-step-text{font-size:.84rem;color:rgba(255,255,255,.75);padding-top:.2rem;line-height:1.5;}
 
-    .reg-card {
-      background: rgba(255,255,255,.04);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 28px;
-      padding: 2.5rem;
-      width: 100%; max-width: 520px;
-      box-shadow: 0 32px 80px rgba(0,0,0,.5);
-      position: relative; z-index: 1;
-    }
+    /* ── Right ── */
+    .right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;background:var(--surface);}
+    .right-inner{width:100%;max-width:440px;}
 
-    .reg-logo {
-      display: flex; align-items: center; gap: .875rem; margin-bottom: 2rem;
-    }
-    .reg-logo-icon {
-      width: 46px; height: 46px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border-radius: 14px; display: flex; align-items: center;
-      justify-content: center; font-size: 1.35rem;
-      box-shadow: 0 4px 20px rgba(99,102,241,.5);
-    }
-    .reg-logo-text { font-size: 1.2rem; font-weight: 900; color: white; line-height: 1.1; }
-    .reg-logo-sub  { font-size: .65rem; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+    /* ── Header ── */
+    .page-header{margin-bottom:1.75rem;}
+    .back-link{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--text-3);text-decoration:none;font-weight:500;margin-bottom:1rem;transition:color .2s;}
+    .back-link:hover{color:var(--primary);}
+    .back-link svg{width:14px;height:14px;}
+    .page-title{font-size:1.5rem;font-weight:800;color:var(--text-1);margin-bottom:.3rem;}
+    .page-sub{font-size:.85rem;color:var(--text-2);}
 
-    /* Step indicator */
-    .step-row { display: flex; align-items: center; margin-bottom: 2rem; }
-    .step-item { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
-    .step-num {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .82rem; font-weight: 800;
-      border: 2px solid rgba(255,255,255,.2); color: rgba(255,255,255,.4);
-      background: transparent; transition: all .3s ease;
-    }
-    .step-item.active .step-num { border-color: #6366f1; color: #a5b4fc; background: rgba(99,102,241,.2); }
-    .step-item.done   .step-num { background: linear-gradient(135deg,#6366f1,#8b5cf6); border-color: transparent; color: white; }
-    .step-lbl { font-size: .65rem; color: rgba(255,255,255,.35); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-    .step-item.active .step-lbl { color: #a5b4fc; }
-    .step-item.done   .step-lbl { color: #6ee7b7; }
-    .step-connector { flex: 1; height: 1px; background: rgba(255,255,255,.12); margin: 0 .75rem 1.5rem; transition: background .3s; }
-    .step-connector.done { background: linear-gradient(90deg,#6366f1,#8b5cf6); }
+    /* ── Progress ── */
+    .progress-row{display:flex;align-items:center;gap:.5rem;margin-bottom:2rem;}
+    .prog-step{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:600;}
+    .prog-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0;transition:all .3s;}
+    .prog-step.active  .prog-circle{background:var(--primary);color:white;box-shadow:0 0 0 4px var(--primary-ring);}
+    .prog-step.done    .prog-circle{background:#059669;color:white;}
+    .prog-step.pending .prog-circle{background:var(--surface-2);color:var(--text-3);border:2px solid var(--border);}
+    .prog-step.active  .prog-label{color:var(--primary);}
+    .prog-step.done    .prog-label{color:#059669;}
+    .prog-step.pending .prog-label{color:var(--text-3);}
+    .prog-line{flex:1;height:2px;background:var(--border);border-radius:2px;transition:background .3s;}
+    .prog-line.done{background:#059669;}
 
-    .step-panel { display: none; }
-    .step-panel.active { display: block; animation: fadeIn .25s ease; }
+    /* ── Device card ── */
+    .device-card{background:var(--primary-pale);border:1px solid #bfdbfe;border-radius:12px;padding:.875rem 1rem;margin-bottom:1.25rem;}
+    .device-card-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--primary);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem;}
+    .device-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:pulse-d 2s infinite;}
+    @keyframes pulse-d{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.5)}50%{box-shadow:0 0 0 5px rgba(37,99,235,0)}}
+    .device-row{display:flex;justify-content:space-between;font-size:.77rem;padding:.15rem 0;}
+    .device-key{color:var(--text-2);}
+    .device-val{font-family:var(--mono);color:var(--text-1);font-size:.73rem;font-weight:600;}
 
-    /* Form fields — dark glass style */
-    .field-label { display: block; font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.6); margin-bottom: .45rem; letter-spacing: .04em; text-transform: uppercase; }
-    .field-input {
-      width: 100%; padding: .75rem 1rem;
-      background: rgba(255,255,255,.07);
-      border: 1.5px solid rgba(255,255,255,.12);
-      border-radius: 12px; font-size: .925rem;
-      font-family: var(--font-sans); color: white;
-      outline: none; transition: all .2s ease;
-    }
-    .field-input::placeholder { color: rgba(255,255,255,.25); }
-    .field-input:focus {
-      border-color: rgba(99,102,241,.8);
-      background: rgba(255,255,255,.1);
-      box-shadow: 0 0 0 4px rgba(99,102,241,.15);
-    }
-    .field-group { margin-bottom: 1.1rem; }
+    /* ── Form ── */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+    .field{margin-bottom:1rem;}
+    .field label{display:block;font-size:.77rem;font-weight:700;color:var(--text-2);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.04em;}
+    .field .opt{font-weight:400;text-transform:none;color:var(--text-3);}
+    .field input{width:100%;padding:.72rem .95rem;background:var(--surface-2);border:1.5px solid var(--border);border-radius:10px;font-size:.9rem;font-family:var(--font);color:var(--text-1);outline:none;transition:all .2s;}
+    .field input::placeholder{color:var(--text-3);}
+    .field input:focus{border-color:var(--primary);background:white;box-shadow:0 0 0 3px var(--primary-ring);}
+    .field input.error-input{border-color:var(--danger);background:#fff5f5;}
 
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+    /* ── Alert ── */
+    .alert-box{display:none;align-items:flex-start;gap:.55rem;padding:.75rem 1rem;border-radius:10px;font-size:.83rem;font-weight:500;margin-bottom:1rem;}
+    .alert-box.visible{display:flex;}
+    .alert-box.error  {background:#fff5f5;border:1px solid #fca5a5;color:#b91c1c;}
+    .alert-box.success{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;}
+    .alert-icon{font-size:.95rem;flex-shrink:0;margin-top:.05rem;}
 
-    /* Device info strip */
-    .device-strip {
-      background: rgba(16,185,129,.12);
-      border: 1px solid rgba(16,185,129,.3);
-      border-radius: 12px; padding: .875rem 1rem;
-      margin-bottom: 1.25rem;
-    }
-    .device-strip-title { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #6ee7b7; margin-bottom: .6rem; }
-    .device-row { display: flex; justify-content: space-between; align-items: center; font-size: .77rem; padding: .2rem 0; }
-    .device-row .dk { color: rgba(255,255,255,.4); }
-    .device-row .dv { font-family: var(--font-mono); color: rgba(255,255,255,.8); font-size: .73rem; }
+    /* ── Buttons ── */
+    .btn{width:100%;padding:.875rem;border:none;border-radius:11px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--font);}
+    .btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(37,99,235,.35);}
+    .btn-primary:hover:not(:disabled){background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.45);}
+    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important;}
+    .btn-spinner{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.35);border-top-color:white;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .link-row{text-align:center;margin-top:1rem;font-size:.8rem;color:var(--text-3);}
+    .link-row a{color:var(--primary);font-weight:600;text-decoration:none;}
+    .link-row a:hover{text-decoration:underline;}
 
-    /* Buttons */
-    .btn-reg {
-      width: 100%; padding: .9rem; border: none; border-radius: 14px;
-      font-size: 1rem; font-weight: 800; cursor: pointer;
-      transition: all .2s ease; margin-top: .5rem;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white; box-shadow: 0 6px 24px rgba(99,102,241,.45);
-      display: flex; align-items: center; justify-content: center; gap: .5rem;
-    }
-    .btn-reg:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(99,102,241,.55); }
-    .btn-reg:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-    .btn-reg .spinner { width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite; }
+    /* ── Success panel ── */
+    .success-panel{text-align:center;}
+    .success-check{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(5,150,105,.35);}
+    .success-check svg{width:40px;height:40px;color:white;}
+    .success-title{font-size:1.4rem;font-weight:800;color:var(--text-1);margin-bottom:.4rem;}
+    .success-sub{font-size:.85rem;color:var(--text-2);margin-bottom:1.75rem;}
 
-    .link-row { text-align: center; margin-top: 1.25rem; font-size: .83rem; color: rgba(255,255,255,.4); }
-    .link-row a { color: #a5b4fc; font-weight: 700; }
-    .link-row a:hover { color: white; }
+    /* ── ID display ── */
+    .id-display{background:var(--text-1);border-radius:16px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:1.25rem;}
+    .id-display-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);font-weight:700;margin-bottom:.6rem;}
+    .id-display-value{font-family:var(--mono);font-size:2.1rem;font-weight:700;letter-spacing:.2em;color:white;word-break:break-all;}
+    .id-display-hint{font-size:.74rem;color:rgba(255,255,255,.4);margin-top:.5rem;}
 
-    /* Alert */
-    .reg-alert { border-radius: 10px; padding: .75rem 1rem; font-size: .83rem; margin-bottom: 1rem; display: none; }
-    .reg-alert.error   { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; display: flex; gap:.5rem; align-items:flex-start; }
-    .reg-alert.success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: #6ee7b7; display: flex; gap:.5rem; align-items:flex-start; }
+    /* ── Action row ── */
+    .action-row{display:flex;gap:.6rem;margin-bottom:1.25rem;}
+    .btn-sm{flex:1;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text-2);font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.35rem;transition:all .2s;font-family:var(--font);}
+    .btn-sm svg{width:13px;height:13px;flex-shrink:0;}
+    .btn-sm:hover{background:var(--primary-pale);border-color:#93c5fd;color:var(--primary);}
 
-    /* Success screen */
-    .success-id-wrap {
-      background: rgba(0,0,0,.4);
-      border: 1px solid rgba(99,102,241,.4);
-      border-radius: 16px; padding: 1.75rem; text-align: center; margin-bottom: 1.25rem;
-    }
-    .success-id-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.4); margin-bottom: .5rem; }
-    .success-id-value {
-      font-family: var(--font-mono); font-size: 2rem; font-weight: 900;
-      letter-spacing: .2em; word-break: break-all;
-      background: linear-gradient(135deg, #a5b4fc, #6ee7b7);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .success-id-hint { font-size: .75rem; color: rgba(255,255,255,.35); margin-top: .5rem; }
+    /* ── QR wrap ── */
+    .qr-wrap{text-align:center;margin-bottom:1.25rem;}
+    .qr-label{font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+    .qr-box{display:inline-block;background:white;padding:10px;border-radius:12px;border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.08);}
 
-    .action-row { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
-    .btn-action {
-      padding: .5rem 1.1rem; border-radius: 10px; font-size: .82rem; font-weight: 700;
-      cursor: pointer; transition: all .2s ease; border: 1.5px solid rgba(255,255,255,.15);
-      background: rgba(255,255,255,.07); color: rgba(255,255,255,.8);
-    }
-    .btn-action:hover { background: rgba(255,255,255,.15); color: white; }
+    /* ── Warning ── */
+    .warn-box{display:flex;align-items:flex-start;gap:.6rem;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.875rem 1rem;font-size:.8rem;color:#92400e;margin-bottom:1.25rem;}
+    .warn-box svg{width:16px;height:16px;flex-shrink:0;margin-top:.1rem;color:#d97706;}
 
-    .warn-box {
-      background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.3);
-      border-radius: 12px; padding: .875rem 1rem; font-size: .8rem;
-      color: #fcd34d; display: flex; gap: .6rem; align-items: flex-start; margin-bottom: 1.25rem;
-    }
-
-    .btn-go {
-      width: 100%; padding: .9rem; border: none; border-radius: 14px;
-      font-size: 1rem; font-weight: 800; cursor: pointer;
-      background: linear-gradient(135deg, #10b981, #06b6d4);
-      color: white; box-shadow: 0 6px 24px rgba(16,185,129,.4);
-      transition: all .2s ease;
-    }
-    .btn-go:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(16,185,129,.55); }
+    /* ── Go btn ── */
+    .btn-go{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(37,99,235,.35);}
+    .btn-go:hover{background:var(--primary-dark);transform:translateY(-1px);}
   </style>
 </head>
 <body>
 
-<!-- Background orbs -->
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
+<div class="page">
 
-<div class="reg-page">
-  <div class="reg-card">
-
-    <div class="reg-logo">
-      <div class="reg-logo-icon">🕒</div>
-      <div>
-        <div class="reg-logo-text">Oasis Pulse</div>
-        <div class="reg-logo-sub">Student Registration</div>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-inner">
+      <div class="hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      </div>
+      <h1 class="hero-title">Create your account</h1>
+      <p class="hero-sub">Register once and you'll receive a unique Tracking ID — your only key to clock in from this device.</p>
+      <div class="hero-steps">
+        <div class="hero-step"><div class="hero-step-num">1</div><div class="hero-step-text">Fill in your details — name, student number, and email.</div></div>
+        <div class="hero-step"><div class="hero-step-num">2</div><div class="hero-step-text">Receive your Tracking ID — no password required.</div></div>
+        <div class="hero-step"><div class="hero-step-num">3</div><div class="hero-step-text">Use your ID from this device to clock in every day.</div></div>
       </div>
     </div>
+  </div>
 
-    <!-- Step indicator -->
-    <div class="step-row">
-      <div class="step-item active" id="step-ind-1">
-        <div class="step-num">1</div>
-        <div class="step-lbl">Details</div>
-      </div>
-      <div class="step-connector" id="line-1-2"></div>
-      <div class="step-item" id="step-ind-2">
-        <div class="step-num">2</div>
-        <div class="step-lbl">Clock-In ID</div>
-      </div>
-    </div>
+  <!-- Right -->
+  <div class="right">
+    <div class="right-inner">
 
-    <div id="reg-alert" class="reg-alert"></div>
-
-    <!-- ── STEP 1 ── -->
-    <div class="step-panel active" id="panel-1">
-      <div style="margin-bottom:1.5rem;">
-        <div style="font-size:1.15rem;font-weight:800;color:white;margin-bottom:.3rem;">Create your account</div>
-        <div style="font-size:.83rem;color:rgba(255,255,255,.45);">No password needed — your Clock-In ID and this device are your credentials.</div>
+      <div class="page-header">
+        <a href="index.html" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to sign in
+        </a>
+        <div class="page-title">Employee Registration</div>
+        <div class="page-sub">Oasis Pulse · Attendance System</div>
       </div>
 
-      <!-- Device being registered -->
-      <div class="device-strip">
-        <div class="device-strip-title">🔒 Device being registered</div>
-        <div class="device-row"><span class="dk">IP Address</span><span class="dv" id="dc-ip">Capturing…</span></div>
-        <div class="device-row"><span class="dk">Browser</span><span class="dv" id="dc-browser">—</span></div>
-        <div class="device-row"><span class="dk">Platform</span><span class="dv" id="dc-platform">—</span></div>
-        <div class="device-row"><span class="dk">Fingerprint</span><span class="dv" id="dc-fp">Generating…</span></div>
+      <!-- Progress -->
+      <div class="progress-row">
+        <div class="prog-step active" id="prog-1">
+          <div class="prog-circle">1</div>
+          <span class="prog-label">Your Details</span>
+        </div>
+        <div class="prog-line" id="prog-line"></div>
+        <div class="prog-step pending" id="prog-2">
+          <div class="prog-circle">2</div>
+          <span class="prog-label">Tracking ID</span>
+        </div>
       </div>
 
-      <form id="step1-form" novalidate>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label" for="full-name">Full Name</label>
-            <input type="text" id="full-name" class="field-input" placeholder="Jane Doe" required autocomplete="name" />
+      <!-- Alert -->
+      <div class="alert-box" id="alert"><span class="alert-icon"></span><span id="alert-text"></span></div>
+
+      <!-- ── Panel 1: Form ── -->
+      <div id="panel-1">
+        <div class="device-card">
+          <div class="device-card-title"><span class="device-dot"></span> Device being registered</div>
+          <div class="device-row"><span class="device-key">Browser</span><span class="device-val" id="dc-browser">—</span></div>
+          <div class="device-row"><span class="device-key">Platform</span><span class="device-val" id="dc-platform">—</span></div>
+          <div class="device-row"><span class="device-key">Fingerprint</span><span class="device-val" id="dc-fp">Generating…</span></div>
+        </div>
+
+        <form id="reg-form" novalidate autocomplete="off">
+          <div class="form-row">
+            <div class="field">
+              <label for="full-name">Full Name</label>
+              <input type="text" id="full-name" placeholder="Jane Doe" required autocomplete="name"/>
+            </div>
+            <div class="field">
+              <label for="student-number">Employee / Student #</label>
+              <input type="text" id="student-number" placeholder="EMP-001" required/>
+            </div>
           </div>
-          <div class="field-group">
-            <label class="field-label" for="student-number">Student Number</label>
-            <input type="text" id="student-number" class="field-input" placeholder="STU-001" required />
+          <div class="field">
+            <label for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" placeholder="you@company.com" required autocomplete="email"/>
           </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="reg-email">Email Address</label>
-          <input type="email" id="reg-email" class="field-input" placeholder="you@example.com" required autocomplete="email" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="phone">Phone <span style="opacity:.5;font-weight:400;text-transform:none;">(optional)</span></label>
-          <input type="tel" id="phone" class="field-input" placeholder="+27 11 000 0000" autocomplete="tel" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="address">Address <span style="opacity:.5;font-weight:400;text-transform:none;">(optional)</span></label>
-          <input type="text" id="address" class="field-input" placeholder="Home or registered address" autocomplete="street-address" />
+          <div class="field">
+            <label for="phone">Phone <span class="opt">(optional)</span></label>
+            <input type="tel" id="phone" placeholder="+27 11 000 0000" autocomplete="tel"/>
+          </div>
+          <div class="field">
+            <label for="address">Address <span class="opt">(optional)</span></label>
+            <input type="text" id="address" placeholder="Home address" autocomplete="street-address"/>
+          </div>
+          <button type="submit" class="btn btn-primary" id="reg-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            Register &amp; Get My Tracking ID
+          </button>
+        </form>
+        <div class="link-row">Already registered? <a href="index.html">Sign in here</a></div>
+      </div>
+
+      <!-- ── Panel 2: Success ── -->
+      <div id="panel-2" style="display:none;">
+        <div class="success-panel">
+          <div class="success-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="success-title">Registration Complete!</div>
+          <div class="success-sub">Your Tracking ID is ready. This is your login key — save it now.</div>
         </div>
 
-        <button type="submit" class="btn-reg" id="register-btn">
-          <span>Register &amp; Get My Clock-In ID</span> <span>→</span>
+        <div class="id-display">
+          <div class="id-display-label">Your Tracking ID</div>
+          <div class="id-display-value" id="tracking-id-display">—</div>
+          <div class="id-display-hint">Use this ID from this device to clock in</div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-sm" id="copy-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy ID
+          </button>
+          <button class="btn-sm" id="download-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Save File
+          </button>
+        </div>
+
+        <div class="qr-wrap">
+          <div class="qr-label">Scan to save your ID</div>
+          <div class="qr-box"><div id="qr-target"></div></div>
+        </div>
+
+        <div class="warn-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div><strong>Save this now!</strong> Your Tracking ID cannot be recovered if lost. Screenshot it or write it down before leaving this page.</div>
+        </div>
+
+        <button class="btn btn-go" id="go-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Go to Clock-In →
         </button>
-      </form>
+      </div>
 
-      <div class="link-row">Already registered? <a href="index.html">Sign in here</a></div>
     </div>
-
-    <!-- ── STEP 2 — SUCCESS ── -->
-    <div class="step-panel" id="panel-2">
-      <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:3.5rem;margin-bottom:.6rem;">🎉</div>
-        <div style="font-size:1.2rem;font-weight:900;color:white;margin-bottom:.3rem;">You're registered!</div>
-        <div style="font-size:.83rem;color:rgba(255,255,255,.45);">This is your Clock-In ID. It's your only login key — guard it.</div>
-      </div>
-
-      <div class="success-id-wrap">
-        <div class="success-id-label">Your Clock-In ID</div>
-        <div class="success-id-value" id="clock-in-id-display">—</div>
-        <div class="success-id-hint">Enter this on the login page from this device to sign in</div>
-      </div>
-
-      <div class="action-row">
-        <button class="btn-action" id="copy-id-btn">📋 Copy ID</button>
-        <button class="btn-action" id="download-id-btn">⬇️ Save as File</button>
-      </div>
-
-      <!-- QR code -->
-      <div style="text-align:center;margin-bottom:1.25rem;">
-        <div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em;">Scan to save your ID</div>
-        <div style="display:inline-block;background:white;padding:10px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);">
-          <canvas id="clock-in-qr-canvas"></canvas>
-        </div>
-      </div>
-
-      <div class="warn-box">
-        <span style="flex-shrink:0;">⚠️</span>
-        <div><strong>Save this now!</strong> You cannot recover your Clock-In ID if lost. Screenshot or write it down before continuing.</div>
-      </div>
-
-      <button class="btn-go" id="go-dashboard-btn">Go to My Dashboard →</button>
-    </div>
-
   </div>
 </div>
 
@@ -288,139 +280,126 @@
 <script src="js/api.js"></script>
 <script src="js/fingerprint.js"></script>
 <script>
-  let deviceFingerprint = null;
+'use strict';
+if (location.protocol === 'file:') location.href = 'http://localhost:3001/register.html';
 
-  // ── Capture device info ────────────────────────────────
-  (async () => {
-    const ua = navigator.userAgent;
-    document.getElementById('dc-browser').textContent =
-      ua.match(/(Chrome|Firefox|Safari|Edge|Opera)[\/\s]([\d.]+)/)?.[0] || ua.slice(0, 28);
-    document.getElementById('dc-platform').textContent = navigator.platform || 'Unknown';
-    document.getElementById('dc-ip').textContent = 'Will be captured at registration';
+/* ── Device info ── */
+let deviceFingerprint = null;
+(async () => {
+  const ua = navigator.userAgent;
+  document.getElementById('dc-browser').textContent  = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)[\/\s]([\d.]+)/)?.[0] || ua.slice(0,30);
+  document.getElementById('dc-platform').textContent = navigator.platform || 'Unknown';
+  try {
+    deviceFingerprint = await getFingerprint();
+    document.getElementById('dc-fp').textContent = '…' + deviceFingerprint.slice(-10).toUpperCase();
+  } catch { document.getElementById('dc-fp').textContent = 'Unavailable'; }
+})();
 
-    try {
-      deviceFingerprint = await getFingerprint();
-      document.getElementById('dc-fp').textContent = '…' + deviceFingerprint.slice(-10).toUpperCase();
-    } catch(e) {
-      document.getElementById('dc-fp').textContent = 'Unavailable';
-    }
-  })();
+/* ── Alert ── */
+function showAlert(msg, type) {
+  const box = document.getElementById('alert');
+  box.className = `alert-box visible ${type}`;
+  document.getElementById('alert-icon').textContent = type === 'error' ? '✕' : '✓';
+  document.getElementById('alert-text').textContent = msg;
+}
+function clearAlert() {
+  const box = document.getElementById('alert');
+  box.className = 'alert-box';
+}
 
-  // ── Alert helper ───────────────────────────────────────
-  function showRegAlert(msg, type) {
-    const el = document.getElementById('reg-alert');
-    el.className = `reg-alert ${type}`;
-    el.innerHTML = `<span>${type==='error'?'❌':'✅'}</span><span>${msg}</span>`;
-    el.style.display = 'flex';
-  }
-  function clearRegAlert() {
-    const el = document.getElementById('reg-alert');
-    el.style.display = 'none'; el.textContent = '';
-  }
-
-  // ── Step nav ───────────────────────────────────────────
-  function goToStep(n) {
-    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById(`panel-${n}`).classList.add('active');
-    [1, 2].forEach(i => {
-      const el = document.getElementById(`step-ind-${i}`);
-      el.classList.toggle('active', i === n);
-      el.classList.toggle('done',   i < n);
+/* ── Go to step 2 ── */
+function showSuccess(trackingId) {
+  document.getElementById('panel-1').style.display = 'none';
+  document.getElementById('panel-2').style.display = 'block';
+  // progress
+  const p1 = document.getElementById('prog-1');
+  const p2 = document.getElementById('prog-2');
+  const ln = document.getElementById('prog-line');
+  p1.className = 'prog-step done';
+  p1.querySelector('.prog-circle').textContent = '✓';
+  ln.classList.add('done');
+  p2.className = 'prog-step active';
+  // ID
+  document.getElementById('tracking-id-display').textContent = trackingId;
+  clearAlert();
+  // QR (non-blocking)
+  try {
+    new QRCode(document.getElementById('qr-target'), {
+      text: trackingId, width: 150, height: 150,
+      colorDark: '#0f172a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H
     });
-    document.getElementById('line-1-2').classList.toggle('done', n > 1);
-    clearRegAlert();
+  } catch(e) { document.querySelector('.qr-wrap').style.display = 'none'; }
+}
+
+/* ── Register ── */
+document.getElementById('reg-form').addEventListener('submit', async e => {
+  e.preventDefault(); clearAlert();
+  const full_name      = document.getElementById('full-name').value.trim();
+  const student_number = document.getElementById('student-number').value.trim();
+  const email          = document.getElementById('reg-email').value.trim();
+  const phone          = document.getElementById('phone').value.trim();
+  const address        = document.getElementById('address').value.trim();
+
+  if (!full_name || !student_number || !email) {
+    showAlert('Full Name, Employee/Student Number, and Email are required.', 'error'); return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showAlert('Please enter a valid email address.', 'error'); return;
   }
 
-  // ── Register form submit ───────────────────────────────
-  document.getElementById('step1-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const full_name      = document.getElementById('full-name').value.trim();
-    const student_number = document.getElementById('student-number').value.trim();
-    const email          = document.getElementById('reg-email').value.trim();
-    const phone          = document.getElementById('phone').value.trim();
-    const address        = document.getElementById('address').value.trim();
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span> Registering…';
 
-    if (!full_name || !student_number || !email) {
-      showRegAlert('Please fill in all required fields.', 'error'); return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showRegAlert('Please enter a valid email address.', 'error'); return;
-    }
-
-    const btn = document.getElementById('register-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span><span>Registering…</span>';
-    clearRegAlert();
-
-    try {
-      if (!deviceFingerprint) deviceFingerprint = await getFingerprint();
-
-      const data = await api.post('/auth/register', {
-        full_name, student_number, email, phone, address,
-        fingerprint: deviceFingerprint
-      });
-
-      // ── Store auth ──
-      localStorage.setItem('tm_token', data.token);
-      localStorage.setItem('tm_user',  JSON.stringify({ ...data.student, role: 'student' }));
-
-      // ── Display Clock-In ID ──
-      const clockId = data.student.clock_in_id;
-      document.getElementById('clock-in-id-display').textContent = clockId;
-
-      // ── Generate QR ──
-      const canvas = document.getElementById('clock-in-qr-canvas');
-      new QRCode(canvas, {
-        text: clockId, width: 160, height: 160,
-        colorDark: '#111827', colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H
-      });
-
-      goToStep(2);
-
-    } catch(err) {
-      showRegAlert(err.message || 'Registration failed. Please try again.', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<span>Register &amp; Get My Clock-In ID</span><span>→</span>';
-    }
-  });
-
-  // ── Copy ID — registered at top level, NOT inside submit ──
-  document.getElementById('copy-id-btn').addEventListener('click', () => {
-    const id = document.getElementById('clock-in-id-display').textContent;
-    if (id && id !== '—') {
-      navigator.clipboard.writeText(id)
-        .then(() => { document.getElementById('copy-id-btn').textContent = '✅ Copied!'; setTimeout(() => { document.getElementById('copy-id-btn').textContent = '📋 Copy ID'; }, 2000); })
-        .catch(() => showRegAlert('Could not copy. Please copy manually: ' + id, 'error'));
-    }
-  });
-
-  // ── Download as text file ──
-  document.getElementById('download-id-btn').addEventListener('click', () => {
-    const id   = document.getElementById('clock-in-id-display').textContent;
-    const name = document.getElementById('full-name')?.value || 'Student';
-    if (!id || id === '—') return;
-    const txt  = [
-      'Oasis Pulse — Clock-In ID',
-      '='.repeat(35),
-      `Name:        ${name}`,
-      `Clock-In ID: ${id}`,
-      '',
-      'This ID is your login. You can only use it from the device you registered on.',
-      'Keep this file safe!'
-    ].join('\n');
-    const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([txt], { type: 'text/plain' })),
-      download: `${name.replace(/\s+/g,'-')}-clock-in-id.txt`
+  try {
+    if (!deviceFingerprint) try { deviceFingerprint = await getFingerprint(); } catch {}
+    const data = await api.post('/auth/register', {
+      full_name, student_number, email, phone, address, fingerprint: deviceFingerprint
     });
-    a.click();
-  });
+    localStorage.setItem('tm_token', data.token);
+    localStorage.setItem('tm_user',  JSON.stringify({ ...data.student, role: 'student' }));
+    showSuccess(data.student.clock_in_id);
+  } catch(err) {
+    showAlert(err.message || 'Registration failed. Please try again.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg> Register &amp; Get My Tracking ID';
+  }
+});
 
-  // ── Go to dashboard ──
-  document.getElementById('go-dashboard-btn').addEventListener('click', () => {
-    window.location.href = 'dashboard.html';
+/* ── Copy ── */
+document.getElementById('copy-btn').addEventListener('click', () => {
+  const id = document.getElementById('tracking-id-display').textContent;
+  if (!id || id === '—') return;
+  navigator.clipboard.writeText(id).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const orig = btn.innerHTML;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    showToast('Tracking ID copied!', 'success');
+  }).catch(() => showAlert('Could not copy — your ID: ' + id, 'error'));
+});
+
+/* ── Download ── */
+document.getElementById('download-btn').addEventListener('click', () => {
+  const id   = document.getElementById('tracking-id-display').textContent;
+  const name = document.getElementById('full-name')?.value.trim() || 'Employee';
+  if (!id || id === '—') return;
+  const txt = [
+    'Oasis Pulse — Tracking ID', '='.repeat(34),
+    `Name:        ${name}`, `Tracking ID: ${id}`, '',
+    'Use this ID from your registered device to clock in.',
+    'Keep this file safe — this ID cannot be recovered.',
+    '', `Generated: ${new Date().toLocaleString()}`
+  ].join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([txt], { type: 'text/plain' })),
+    download: `${name.replace(/\s+/g,'-')}-tracking-id.txt`
   });
+  a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* ── Go ── */
+document.getElementById('go-btn').addEventListener('click', () => { location.href = 'index.html'; });
 </script>
 </body>
 </html>

@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin Dashboard — Oasis Pulse</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#060d1c;--sidebar:#08101f;--card:#0d1829;--card2:#0a1422;--border:#1e2d45;
+      --blue:#2563eb;--blue-mid:#3b82f6;--blue-pale:rgba(37,99,235,.12);--blue-glow:rgba(37,99,235,.3);
+      --text:#f1f5f9;--muted:#64748b;--muted2:#94a3b8;
+      --success:#10b981;--danger:#ef4444;--warning:#f59e0b;--amber:#f97316;
+      --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;-webkit-font-smoothing:antialiased;}
+
+    /* ── Sidebar ────────────────────────────────────────────── */
+    .sidebar{
+      width:230px;flex-shrink:0;background:var(--sidebar);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;height:100vh;
+      position:sticky;top:0;overflow-y:auto;
+    }
+    .sidebar-logo{
+      display:flex;align-items:center;gap:.8rem;
+      padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);
+    }
+    .logo-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--blue),var(--blue-mid));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px var(--blue-glow);flex-shrink:0;}
+    .logo-icon svg{width:20px;height:20px;color:#fff;}
+    .logo-name{font-size:.92rem;font-weight:800;line-height:1.15;}
+    .logo-sub{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.1rem;}
+
+    .nav{flex:1;padding:.75rem 0;}
+    .nav-section{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:.75rem 1.25rem .3rem;}
+    .nav-item{
+      display:flex;align-items:center;gap:.65rem;
+      padding:.575rem 1.25rem;margin:1px .5rem;border-radius:9px;
+      color:var(--muted2);font-size:.83rem;font-weight:500;
+      cursor:pointer;border:none;background:none;
+      width:calc(100% - 1rem);text-align:left;font-family:var(--font);
+      transition:all .18s;
+    }
+    .nav-item:hover{color:var(--text);background:rgba(255,255,255,.04);}
+    .nav-item.active{color:var(--text);background:var(--blue-pale);font-weight:600;}
+    .nav-item svg{width:16px;height:16px;flex-shrink:0;}
+
+    .sidebar-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);}
+    .user-row{display:flex;align-items:center;gap:.65rem;}
+    .user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-mid));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;flex-shrink:0;}
+    .user-info{flex:1;min-width:0;}
+    .user-name{font-size:.79rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .user-role{font-size:.62rem;color:var(--muted);}
+    .logout-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;border-radius:6px;display:flex;transition:all .18s;}
+    .logout-btn:hover{color:var(--danger);}
+    .logout-btn svg{width:15px;height:15px;}
+
+    /* ── Main ────────────────────────────────────────────────── */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .topbar{
+      background:var(--card);border-bottom:1px solid var(--border);
+      padding:0 1.75rem;height:60px;
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:20;
+    }
+    .topbar-title{font-size:.97rem;font-weight:700;}
+    .topbar-sub{font-size:.72rem;color:var(--muted);margin-top:.05rem;}
+    .topbar-right{display:flex;align-items:center;gap:.65rem;}
+    .topbar-time{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--blue-mid);background:var(--blue-pale);padding:.3rem .65rem;border-radius:8px;border:1px solid rgba(59,130,246,.2);}
+    .btn-refresh{background:none;border:1px solid var(--border);border-radius:8px;padding:.35rem .65rem;cursor:pointer;color:var(--muted2);font-size:.78rem;font-family:var(--font);font-weight:600;display:flex;align-items:center;gap:.35rem;transition:all .18s;}
+    .btn-refresh:hover{background:var(--blue-pale);border-color:rgba(59,130,246,.3);color:var(--text);}
+    .btn-refresh svg{width:13px;height:13px;}
+
+    .body{flex:1;overflow-y:auto;padding:1.75rem;}
+
+    /* ── Sections ──────────────────────────────────────────── */
+    .section{display:none;animation:fadeUp .22s ease;}
+    .section.active{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── Stat cards ─────────────────────────────────────────── */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+    .stat:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3);}
+    .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;}
+    .stat.blue::before{background:linear-gradient(90deg,var(--blue),var(--blue-mid));}
+    .stat.green::before{background:linear-gradient(90deg,var(--success),#34d399);}
+    .stat.amber::before{background:linear-gradient(90deg,var(--amber),var(--warning));}
+    .stat.red::before{background:linear-gradient(90deg,var(--danger),#f87171);}
+    .stat-val{font-size:1.85rem;font-weight:900;line-height:1;margin-bottom:.3rem;}
+    .stat-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:1.25rem;}
+    .card-hd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;padding:1rem 1.25rem;border-bottom:1px solid var(--border);}
+    .card-title{font-size:.9rem;font-weight:700;}
+    .card-bd{padding:1.25rem;}
+    .card-bd.no-pad{padding:0;}
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.52rem .95rem;border-radius:9px;font-size:.81rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:var(--font);transition:all .18s;white-space:nowrap;}
+    .btn svg{width:14px;height:14px;flex-shrink:0;}
+    .btn:disabled{opacity:.45;cursor:not-allowed;}
+    .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 10px var(--blue-glow);}
+    .btn-primary:hover:not(:disabled){background:#1d4ed8;transform:translateY(-1px);}
+    .btn-success{background:var(--success);color:#fff;border-color:var(--success);}
+    .btn-success:hover:not(:disabled){background:#047857;transform:translateY(-1px);}
+    .btn-danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+    .btn-danger:hover:not(:disabled){background:#dc2626;transform:translateY(-1px);}
+    .btn-ghost{background:transparent;color:var(--muted2);border-color:var(--border);}
+    .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.04);color:var(--text);}
+    .btn-sm{padding:.32rem .65rem;font-size:.75rem;}
+    .btn-block{width:100%;}
+    .spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Badges ───────────────────────────────────────────────── */
+    .badge{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:999px;font-size:.68rem;font-weight:700;}
+    .b-active {background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);}
+    .b-expired{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25);}
+    .b-revoked{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25);}
+    .b-used   {background:rgba(100,116,139,.15);color:var(--muted2);border:1px solid var(--border);}
+    .b-session{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);}
+    .b-closed {background:rgba(100,116,139,.12);color:var(--muted);border:1px solid var(--border);}
+
+    /* ── Forms ────────────────────────────────────────────────── */
+    .field{margin-bottom:.95rem;}
+    .field label{display:block;font-size:.71rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.38rem;}
+    .field input,.field select{width:100%;padding:.65rem .875rem;background:#07111f;border:1.5px solid var(--border);border-radius:9px;font-size:.875rem;font-family:var(--font);color:var(--text);outline:none;transition:border-color .18s;}
+    .field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+    .field input::placeholder{color:#273548;}
+    .field select option{background:#07111f;}
+    .field-hint{font-size:.71rem;color:var(--muted);margin-top:.25rem;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    @media(max-width:640px){.grid-2{grid-template-columns:1fr;}}
+
+    /* Toggle */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem .875rem;background:#07111f;border:1.5px solid var(--border);border-radius:9px;}
+    .toggle-label{font-size:.875rem;color:var(--muted2);}
+    .toggle{position:relative;width:42px;height:22px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .track{position:absolute;inset:0;background:#273548;border-radius:999px;cursor:pointer;transition:background .2s;}
+    .toggle input:checked ~ .track{background:var(--blue);}
+    .track::before{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;left:3px;top:3px;transition:transform .2s;}
+    .toggle input:checked ~ .track::before{transform:translateX(20px);}
+
+    /* Alert */
+    .alert{display:none;align-items:flex-start;gap:.5rem;padding:.7rem .95rem;border-radius:9px;font-size:.82rem;margin-bottom:.875rem;}
+    .alert.show{display:flex;}
+    .alert-success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;}
+    .alert-error  {background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+    .alert svg{width:14px;height:14px;flex-shrink:0;margin-top:.1rem;}
+
+    /* Table */
+    .tbl-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:.81rem;}
+    th{padding:.65rem 1rem;text-align:left;font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+    td{padding:.72rem 1rem;border-bottom:1px solid rgba(30,45,69,.5);color:var(--muted2);vertical-align:middle;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:rgba(255,255,255,.015);}
+    td strong{color:var(--text);}
+    .mono{font-family:var(--mono);font-size:.74rem;}
+
+    /* Empty */
+    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem;text-align:center;color:var(--muted);}
+    .empty svg{width:44px;height:44px;margin-bottom:.875rem;color:#1e2d45;}
+    .empty p{font-size:.84rem;}
+
+    /* QR Modal */
+    .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem;}
+    .modal-ov.open{display:flex;animation:fadeUp .2s ease;}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:2rem;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.7);}
+    .modal h2{font-size:1.05rem;font-weight:800;margin-bottom:.4rem;}
+    .modal-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.5;}
+    #qr-img{width:200px;height:200px;border:6px solid #fff;border-radius:14px;display:block;margin:0 auto 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+    .url-box{background:#07111f;border:1px solid var(--border);border-radius:9px;padding:.6rem .875rem;font-family:var(--mono);font-size:.71rem;word-break:break-all;color:var(--muted2);margin-bottom:1.25rem;text-align:left;}
+    .modal-actions{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;}
+
+    /* Session indicator */
+    .session-bar{
+      display:flex;align-items:center;justify-content:space-between;
+      background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);
+      border-radius:12px;padding:.875rem 1.1rem;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;
+    }
+    .session-bar.inactive{background:rgba(100,116,139,.08);border-color:rgba(100,116,139,.2);}
+    .session-info{display:flex;align-items:center;gap:.65rem;}
+    .session-dot{width:9px;height:9px;border-radius:50%;background:var(--success);flex-shrink:0;animation:dot-pulse 2s infinite;}
+    @keyframes dot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+    .session-bar.inactive .session-dot{background:var(--muted);animation:none;}
+    .session-text{font-size:.83rem;font-weight:600;}
+    .session-meta{font-size:.74rem;color:var(--muted);margin-top:.1rem;}
+
+    /* Responsive */
+    @media(max-width:768px){
+      .sidebar{display:none;}
+      .body{padding:1rem;}
+      .stats{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- QR Modal -->
+<div class="modal-ov" id="qr-modal">
+  <div class="modal">
+    <h2 id="modal-title">QR Code</h2>
+    <p class="modal-sub" id="modal-sub">Share this with the student or display it in the room.</p>
+    <img id="qr-img" src="" alt="QR Code"/>
+    <div class="url-box" id="modal-url"></div>
+    <div class="modal-actions">
+      <a id="modal-dl" href="" download="qr-invite.png" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </a>
+      <button class="btn btn-ghost" onclick="copyUrl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Link
+      </button>
+      <button class="btn btn-ghost" onclick="document.getElementById('qr-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div><div class="logo-name">Oasis Pulse</div><div class="logo-sub">Admin Panel</div></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <button class="nav-item active" data-s="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
+    <div class="nav-section">QR Codes</div>
+    <button class="nav-item" data-s="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Create QR Code</button>
+    <button class="nav-item" data-s="codes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M3 11V9h2"/><path d="M11 3h2v2"/></svg>All Codes</button>
+    <div class="nav-section">Attendance</div>
+    <button class="nav-item" data-s="session"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Session Control</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-av" id="sb-av">A</div>
+      <div class="user-info"><div class="user-name" id="sb-name">Admin</div><div class="user-role">Administrator</div></div>
+      <button class="logout-btn" id="logout-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" id="page-title">Dashboard</div><div class="topbar-sub">Oasis Pulse · QR Access Control</div></div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="topbar-clock">00:00:00</div>
+      <button class="btn-refresh" onclick="loadCurrent()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-4.22"/></svg>Refresh</button>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- DASHBOARD -->
+    <div class="section active" id="s-dashboard">
+      <div class="stats">
+        <div class="stat blue"><div class="stat-val" id="st-total">—</div><div class="stat-lbl">Total Codes</div></div>
+        <div class="stat green"><div class="stat-val" id="st-active">—</div><div class="stat-lbl">Active</div></div>
+        <div class="stat amber"><div class="stat-val" id="st-expired">—</div><div class="stat-lbl">Expired</div></div>
+        <div class="stat red"><div class="stat-val" id="st-revoked">—</div><div class="stat-lbl">Revoked / Used</div></div>
+      </div>
+      <div class="grid-2" style="gap:1.25rem;">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">Recent QR Codes</span><button class="btn btn-ghost btn-sm" data-s="codes">View all</button></div>
+          <div class="card-bd no-pad" id="dash-recent"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">Today's Session</span><button class="btn btn-ghost btn-sm" data-s="session">Manage</button></div>
+          <div class="card-bd" id="dash-session">
+            <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Loading…</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE QR -->
+    <div class="section" id="s-create">
+      <div class="card" style="max-width:560px;">
+        <div class="card-hd"><span class="card-title">Generate Invitation QR Code</span></div>
+        <div class="card-bd">
+          <div class="alert" id="create-alert"></div>
+
+          <!-- Session link -->
+          <div style="background:rgba(37,99,235,.08);border:1px solid rgba(59,130,246,.2);border-radius:11px;padding:.875rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:rgba(147,197,253,.8);line-height:1.55;">
+            <strong style="color:var(--text);display:block;margin-bottom:.3rem;">📍 This QR is linked to your active attendance session</strong>
+            When students scan this code, they are granted access and redirected to registration or login. Their clock-in will be linked to the current session's location.
+          </div>
+
+          <div class="field">
+            <label>Label <span style="font-weight:400;text-transform:none;color:var(--muted)">(optional)</span></label>
+            <input type="text" id="f-label" placeholder="e.g. Morning Batch — Room 101"/>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Expires After (hours)</label>
+              <input type="number" id="f-hours" value="24" min="1" max="8760"/>
+              <div class="field-hint">1 = 1 hour · 168 = 1 week</div>
+            </div>
+            <div class="field">
+              <label>Max Scans</label>
+              <input type="number" id="f-uses" value="1" min="1"/>
+              <div class="field-hint">How many times before auto-revoke</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>After scan, send visitor to</label>
+            <select id="f-redirect">
+              <option value="register">Registration page</option>
+              <option value="login">Login page</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="toggle-row">
+              <span class="toggle-label">One-time use — revoke after first scan</span>
+              <label class="toggle">
+                <input type="checkbox" id="f-onetime" checked/>
+                <span class="track"></span>
+              </label>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" id="create-btn" style="padding:.85rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/></svg>
+            Generate QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL CODES -->
+    <div class="section" id="s-codes">
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">All Invitation Codes</span>
+          <span style="font-size:.78rem;color:var(--muted);" id="codes-count">—</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Label</th><th>Code</th><th>Status</th><th>Scans</th><th>Redirect</th><th>Expires</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="codes-body"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSION CONTROL -->
+    <div class="section" id="s-session">
+      <div class="grid-2" style="gap:1.25rem;align-items:start;">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">Open Attendance Session</span></div>
+          <div class="card-bd">
+            <div style="background:rgba(37,99,235,.08);border:1px solid rgba(59,130,246,.2);border-radius:11px;padding:.875rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:rgba(147,197,253,.8);line-height:1.55;">
+              Opening a session links today's clock-ins to a specific location. Students can only clock in while a session is active. QR codes generated while a session is open are tied to that session's venue.
+            </div>
+            <div class="field">
+              <label>Venue / Location</label>
+              <select id="sess-loc" class="form-control"><option value="">Loading locations…</option></select>
+            </div>
+            <div class="field">
+              <label>Session Note <span style="font-weight:400;text-transform:none;color:var(--muted)">(optional)</span></label>
+              <input type="text" id="sess-note" placeholder="e.g. Monday morning lecture"/>
+            </div>
+            <div id="sess-alert" class="alert"></div>
+            <div style="display:flex;gap:.65rem;">
+              <button class="btn btn-success" style="flex:1;" id="open-sess-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Open Session
+              </button>
+              <button class="btn btn-danger" id="close-sess-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">Current Session Status</span></div>
+          <div class="card-bd" id="sess-status-panel">
+            <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Loading…</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /body -->
+</div><!-- /main -->
+
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+'use strict';
+
+/* ── Auth guard ── */
+const adminToken = localStorage.getItem('qr_admin_token');
+const adminData  = JSON.parse(localStorage.getItem('qr_admin') || 'null');
+if (!adminToken || !adminData) location.href = 'admin-login.html';
+
+document.getElementById('sb-name').textContent = adminData?.full_name || 'Admin';
+document.getElementById('sb-av').textContent   = (adminData?.full_name || 'A').charAt(0).toUpperCase();
+document.getElementById('logout-btn').addEventListener('click', () => {
+  localStorage.removeItem('qr_admin_token'); localStorage.removeItem('qr_admin');
+  location.href = 'admin-login.html';
+});
+
+/* ── Clock ── */
+setInterval(() => {
+  document.getElementById('topbar-clock').textContent =
+    new Date().toLocaleTimeString('en-US', { hour12: false });
+}, 1000);
+
+/* ── Navigation ── */
+const TITLES = { dashboard:'Dashboard', create:'Create QR Code', codes:'All Codes', session:'Session Control' };
+let current = 'dashboard';
+const LOADERS = {};
+
+function go(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`s-${name}`)?.classList.add('active');
+  document.querySelector(`.nav-item[data-s="${name}"]`)?.classList.add('active');
+  document.getElementById('page-title').textContent = TITLES[name] || name;
+  current = name;
+  LOADERS[name]?.();
+}
+document.querySelectorAll('[data-s]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); go(el.dataset.s); }));
+function loadCurrent() { LOADERS[current]?.(); }
+
+/* ── Helpers ── */
+const H = {
+  headers() { return { 'Content-Type':'application/json', Authorization:`Bearer ${adminToken}` }; },
+  esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); },
+  date(iso) { if(!iso)return'—'; return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); },
+  badge(s) {
+    const m={active:'b-active',expired:'b-expired',revoked:'b-revoked',used_up:'b-used'};
+    return `<span class="badge ${m[s]||'b-used'}">${s.replace('_',' ')}</span>`;
+  }
+};
+
+/* ── Dashboard ── */
+LOADERS.dashboard = async function() {
+  try {
+    const [listRes, sessRes] = await Promise.allSettled([
+      fetch(`${QR_CONFIG.apiBase}/qr/list`, { headers: H.headers() }).then(r=>r.json()),
+      fetch(`${QR_CONFIG.apiBase}/admin/session-today`, { headers: H.headers() }).then(r=>r.json()).catch(()=>({session:null}))
+    ]);
+
+    if (listRes.status === 'fulfilled') {
+      const list = listRes.value.invites || [];
+      const c = { active:0, expired:0, revoked:0, used_up:0 };
+      list.forEach(i => c[i.status] = (c[i.status]||0)+1);
+      document.getElementById('st-total').textContent   = list.length;
+      document.getElementById('st-active').textContent  = c.active;
+      document.getElementById('st-expired').textContent = c.expired;
+      document.getElementById('st-revoked').textContent = c.revoked + c.used_up;
+
+      const recent = list.slice(0, 5);
+      document.getElementById('dash-recent').innerHTML = recent.length
+        ? recent.map(inv => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:1px solid rgba(30,45,69,.5);">
+            <div><strong style="font-size:.83rem;">${H.esc(inv.label||'—')}</strong><div style="font-size:.72rem;color:var(--muted);margin-top:.15rem;">${H.date(inv.created_at)}</div></div>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              ${H.badge(inv.status)}
+              ${inv.status==='active'?`<button class="btn btn-ghost btn-sm" onclick="showQR('${H.esc(inv.code)}','${H.esc(inv.label||'')}')">QR</button>`:''}
+            </div>
+          </div>`).join('')
+        : '<div class="empty" style="padding:2rem;"><p>No codes yet.</p></div>';
+    }
+
+    // Session status in dashboard
+    renderSessionStatus(sessRes.status==='fulfilled'?sessRes.value?.session:null, 'dash-session');
+  } catch(e) { console.error(e); }
+};
+
+/* ── Codes list ── */
+LOADERS.codes = async function() {
+  const tbody = document.getElementById('codes-body');
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">Loading…</td></tr>';
+  try {
+    const res  = await fetch(`${QR_CONFIG.apiBase}/qr/list`, { headers: H.headers() });
+    if (res.status===401) { location.href='admin-login.html'; return; }
+    const data = await res.json();
+    const list = data.invites || [];
+    document.getElementById('codes-count').textContent = `${list.length} code${list.length!==1?'s':''}`;
+    tbody.innerHTML = list.length ? list.map(inv => `<tr>
+      <td><strong>${H.esc(inv.label||'—')}</strong></td>
+      <td class="mono">${H.esc(inv.code.substring(0,14))}…</td>
+      <td>${H.badge(inv.status)}</td>
+      <td>${inv.use_count}/${inv.max_uses}</td>
+      <td><span style="font-size:.72rem;background:var(--blue-pale);color:var(--blue-mid);padding:.1rem .45rem;border-radius:999px;">${H.esc(inv.redirect_to)}</span></td>
+      <td style="font-size:.77rem;${new Date(inv.expires_at)<new Date()?'color:var(--danger);':''}">${H.date(inv.expires_at)}</td>
+      <td style="font-size:.77rem;color:var(--muted);">${H.date(inv.created_at)}</td>
+      <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="showQR('${H.esc(inv.code)}','${H.esc(inv.label||'')}')">View QR</button>
+        ${inv.status==='active'?`<button class="btn btn-danger btn-sm" onclick="revokeCode('${inv.id}')">Revoke</button>`:''}
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted);">No codes created yet. Generate one!</td></tr>';
+  } catch(e) { console.error(e); }
+};
+
+/* ── Create QR ── */
+LOADERS.create = function() {};
+document.getElementById('create-btn').addEventListener('click', async () => {
+  clearAlert('create-alert');
+  const label   = document.getElementById('f-label').value.trim();
+  const hours   = parseInt(document.getElementById('f-hours').value)  || 24;
+  const maxUses = parseInt(document.getElementById('f-uses').value)   || 1;
+  const redir   = document.getElementById('f-redirect').value;
+  const oneTime = document.getElementById('f-onetime').checked;
+
+  const btn = document.getElementById('create-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>&nbsp;Generating…';
+
+  try {
+    const res  = await fetch(`${QR_CONFIG.apiBase}/qr/create`, {
+      method:'POST', headers: H.headers(),
+      body: JSON.stringify({ label, expires_in_hours:hours, max_uses:maxUses, redirect_to:redir, one_time_use:oneTime })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert('create-alert', data.error||'Failed to create QR code.', 'error'); return; }
+    showQR(data.invite.code, label||'Invitation QR');
+    showAlert('create-alert', '✓ QR code created! Download or copy the link to share it.', 'success');
+    LOADERS.dashboard();
+  } catch { showAlert('create-alert', 'Network error. Please try again.', 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/></svg> Generate QR Code`;
+  }
+});
+
+/* ── Session ── */
+LOADERS.session = async function() {
+  // Load locations for select
+  try {
+    const r = await fetch(`${QR_CONFIG.apiBase}/admin/locations`, { headers: H.headers() }).catch(()=>null);
+    if (r?.ok) {
+      const d = await r.json();
+      const locs = (d.locations||[]).filter(l=>l.is_active);
+      const sel  = document.getElementById('sess-loc');
+      sel.innerHTML = locs.length
+        ? locs.map(l=>`<option value="${l.id}">${H.esc(l.name)}</option>`).join('')
+        : '<option value="">No locations — add one in the Attendance admin first</option>';
+    }
+  } catch {}
+  // Load current session
+  await refreshSessionStatus();
+};
+
+async function refreshSessionStatus() {
+  try {
+    const r = await fetch(`${QR_CONFIG.apiBase}/admin/session-today`, { headers: H.headers() }).catch(()=>({json:()=>({session:null})}));
+    const d = r.json ? await r.json() : { session: null };
+    renderSessionStatus(d?.session, 'sess-status-panel');
+    renderSessionStatus(d?.session, 'dash-session');
+  } catch {}
+}
+
+function renderSessionStatus(sess, panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  if (sess?.is_active) {
+    panel.innerHTML = `
+      <div class="session-bar">
+        <div class="session-info">
+          <span class="session-dot"></span>
+          <div><div class="session-text">${H.esc(sess.locations?.name||'Active session')}</div>
+          <div class="session-meta">Opened ${H.date(sess.opened_at)}${sess.note?' · '+H.esc(sess.note):''}</div></div>
+        </div>
+        <span class="badge b-session">Open</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">Students can currently clock in. QR codes you generate are linked to this venue.</p>`;
+  } else {
+    panel.innerHTML = `
+      <div class="session-bar inactive">
+        <div class="session-info">
+          <span class="session-dot"></span>
+          <div><div class="session-text">No active session</div>
+          <div class="session-meta">Students cannot clock in until a session is opened</div></div>
+        </div>
+        <span class="badge b-closed">Closed</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">Open a session to allow clock-ins and link QR codes to a venue.</p>`;
+  }
+}
+
+document.getElementById('open-sess-btn').addEventListener('click', async () => {
+  const locId = document.getElementById('sess-loc').value;
+  const note  = document.getElementById('sess-note').value.trim();
+  if (!locId) { showAlert('sess-alert','Please select a location.','error'); return; }
+  const btn = document.getElementById('open-sess-btn');
+  setLoad(btn, true, 'Opening…');
+  clearAlert('sess-alert');
+  try {
+    const r = await fetch(`${QR_CONFIG.apiBase}/admin/session/open`, {
+      method:'POST', headers: H.headers(), body: JSON.stringify({ location_id:locId, note })
+    });
+    const d = await r.json();
+    if (!r.ok) { showAlert('sess-alert', d.error||'Failed to open session.','error'); return; }
+    showAlert('sess-alert', d.message||'Session opened!', 'success');
+    await refreshSessionStatus();
+  } catch { showAlert('sess-alert','Network error.','error'); }
+  finally { setLoad(btn, false); }
+});
+
+document.getElementById('close-sess-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('close-sess-btn');
+  setLoad(btn, true, 'Closing…');
+  try {
+    const r = await fetch(`${QR_CONFIG.apiBase}/admin/session/close`, { method:'POST', headers: H.headers(), body:'{}' });
+    const d = await r.json();
+    if (!r.ok) { showToast(d.error||'Failed to close session.'); return; }
+    showAlert('sess-alert', 'Session closed. Clock-in is now disabled.', 'success');
+    await refreshSessionStatus();
+  } catch { showToast('Network error.'); }
+  finally { setLoad(btn, false); }
+});
+
+/* ── Revoke ── */
+async function revokeCode(id) {
+  if (!confirm('Revoke this QR code? It will immediately become invalid.')) return;
+  try {
+    const r = await fetch(`${QR_CONFIG.apiBase}/qr/revoke`, { method:'PATCH', headers: H.headers(), body: JSON.stringify({ id }) });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error||'Failed'); return; }
+    loadCurrent();
+  } catch { alert('Network error'); }
+}
+
+/* ── QR Modal ── */
+function showQR(code, label) {
+  const url = `${QR_CONFIG.appBase}/validate.html?code=${encodeURIComponent(code)}`;
+  document.getElementById('modal-title').textContent = label || 'Invitation QR Code';
+  document.getElementById('modal-sub').textContent   = 'Share this QR code or link with the student.';
+  document.getElementById('modal-url').textContent   = url;
+  document.getElementById('modal-dl').href           = '#';
+  // Render QR
+  const wrap = document.createElement('div');
+  wrap.style.display = 'none';
+  document.body.appendChild(wrap);
+  try {
+    const qr = new QRCode(wrap, { text:url, width:300, height:300, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.H });
+    setTimeout(() => {
+      const img = wrap.querySelector('canvas') || wrap.querySelector('img');
+      const src = img?.toDataURL?.() || img?.src || '';
+      document.getElementById('qr-img').src = src;
+      document.getElementById('modal-dl').href = src;
+      wrap.remove();
+    }, 100);
+  } catch { wrap.remove(); }
+  document.getElementById('qr-modal').classList.add('open');
+}
+document.getElementById('qr-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('qr-modal')) document.getElementById('qr-modal').classList.remove('open');
+});
+function copyUrl() {
+  const url = document.getElementById('modal-url').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied!'));
+}
+
+/* ── Helpers ── */
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.className = `alert show alert-${type}`;
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;margin-top:.1rem"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${H.esc(msg)}</span>`;
+}
+function clearAlert(id) { const el=document.getElementById(id); el.className='alert'; el.innerHTML=''; }
+function setLoad(btn, loading, text='…') {
+  btn.disabled = loading;
+  if (loading) { btn._orig=btn.innerHTML; btn.innerHTML=`<span class="spinner"></span>&nbsp;${text}`; }
+  else btn.innerHTML = btn._orig || btn.innerHTML;
+}
+function showToast(msg) {
+  const t = Object.assign(document.createElement('div'), {textContent:msg});
+  t.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:#1e2d45;color:#f1f5f9;padding:.75rem 1.1rem;border-radius:10px;font-size:.83rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.5);border:1px solid #2a3f5f;animation:fadeUp .25s ease;';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),320);},2800);
+}
+
+/* ── Boot ── */
+go('dashboard');
+</script>
+</body>
+</html>

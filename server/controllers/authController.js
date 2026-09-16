@@ -28,33 +28,10 @@ async function registerStudent(req, res) {
       return res.status(409).json({ error: 'A student with this email or student number already exists' });
     }
 
-    if (fingerprint) {
-      const { data: registeredDevice, error: deviceError } = await supabase
-        .from('students')
-        .select('id, full_name')
-        .eq('device_fingerprint', fingerprint)
-        .limit(1)
-        .maybeSingle();
-
-      if (deviceError) {
-        console.error('Device registration check error:', deviceError);
-        return res.status(500).json({ error: 'Could not verify this device. Please try again.' });
-      }
-      if (registeredDevice) {
-        return res.status(409).json({
-          error: 'This device is already registered to a student. One device can only have one student account.',
-          code: 'DEVICE_ALREADY_REGISTERED'
-        });
-      }
-    }
-
     const clock_in_id  = generateClockInId();
     const clientIP     = getClientIP(req);
     const clientMAC    = getClientMAC(req);
 
-    // We store an empty hash as placeholder — students don't use passwords
-    // Use bcrypt hash of a random value so schema NOT NULL is satisfied
-    // even if the ALTER TABLE hasn't been run yet
     const password_hash = await bcrypt.hash(clock_in_id + Date.now(), 10);
 
     const { data: student, error } = await supabase
@@ -64,14 +41,13 @@ async function registerStudent(req, res) {
         student_number,
         email:              email.toLowerCase().trim(),
         phone:              phone || null,
-        device_address:     address || null,
-        password_hash,          // placeholder — never used for login
+        password_hash,
         clock_in_id,
         registered_ip:      clientIP,
         registered_mac:     clientMAC,
         device_fingerprint: fingerprint || null
       })
-      .select('id, full_name, email, student_number, clock_in_id, device_address, created_at')
+      .select('id, full_name, email, student_number, clock_in_id, created_at')
       .single();
 
     if (error) {
@@ -89,7 +65,6 @@ async function registerStudent(req, res) {
         email:          student.email,
         student_number: student.student_number,
         clock_in_id:    student.clock_in_id,
-        device_address: student.device_address,
         created_at:     student.created_at,
         role:           'student'
       },

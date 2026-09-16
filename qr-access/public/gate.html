@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Oasis Pulse — Access Gate</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#060d1c;
+      --blue:#2563eb;--blue-mid:#3b82f6;--blue-glow:rgba(37,99,235,.35);
+      --text:#f1f5f9;--muted:#64748b;--border:#1e2d45;
+      --card:#0d1829;
+    }
+
+    /* ── Full-screen split layout ──────────────────────────── */
+    body{
+      font-family:'Inter',system-ui,-apple-system,sans-serif;
+      background:var(--bg);color:var(--text);
+      min-height:100vh;overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* Animated background */
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+    .bg-orb{
+      position:absolute;border-radius:50%;filter:blur(120px);
+      animation:orbFloat 14s ease-in-out infinite;
+    }
+    .bg-orb:nth-child(1){width:600px;height:600px;background:rgba(37,99,235,.18);top:-200px;left:-150px;}
+    .bg-orb:nth-child(2){width:500px;height:500px;background:rgba(59,130,246,.12);bottom:-150px;right:-100px;animation-delay:-7s;}
+    .bg-orb:nth-child(3){width:350px;height:350px;background:rgba(37,99,235,.1);top:40%;left:50%;transform:translate(-50%,-50%);animation-delay:-3s;}
+    @keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-25px)}}
+    .bg-grid{
+      position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);
+      background-size:52px 52px;
+    }
+
+    /* ── Page wrapper ──────────────────────────────────────── */
+    .page{
+      position:relative;z-index:1;
+      min-height:100vh;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+    }
+    @media(max-width:860px){.page{grid-template-columns:1fr;}}
+
+    /* ── Left: Branding ────────────────────────────────────── */
+    .left{
+      display:flex;flex-direction:column;
+      justify-content:center;padding:3rem 4rem;
+      border-right:1px solid rgba(59,130,246,.1);
+    }
+    @media(max-width:860px){.left{display:none;}}
+
+    .brand-logo{display:flex;align-items:center;gap:1rem;margin-bottom:3rem;}
+    .brand-icon{
+      width:56px;height:56px;border-radius:18px;
+      background:linear-gradient(135deg,var(--blue),var(--blue-mid));
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 30px var(--blue-glow);
+    }
+    .brand-icon svg{width:30px;height:30px;color:#fff;}
+    .brand-name{font-size:1.5rem;font-weight:900;letter-spacing:-.02em;}
+    .brand-tag{font-size:.7rem;color:var(--blue-mid);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-top:.15rem;}
+
+    .hero-title{
+      font-size:2.75rem;font-weight:900;line-height:1.15;
+      letter-spacing:-.03em;margin-bottom:1.25rem;
+    }
+    .hero-title span{
+      background:linear-gradient(135deg,#60a5fa,#a78bfa);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .hero-sub{font-size:1.05rem;color:var(--muted);line-height:1.65;margin-bottom:2.5rem;max-width:420px;}
+
+    .feature-list{display:flex;flex-direction:column;gap:.875rem;}
+    .feature{display:flex;align-items:center;gap:.875rem;}
+    .feature-dot{
+      width:36px;height:36px;border-radius:10px;flex-shrink:0;
+      background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.25);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .feature-dot svg{width:18px;height:18px;color:var(--blue-mid);}
+    .feature-text{font-size:.88rem;color:var(--muted);line-height:1.4;}
+    .feature-text strong{color:var(--text);}
+
+    /* ── Right: Action panel ────────────────────────────────── */
+    .right{
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:2.5rem 2rem;
+    }
+    .right-inner{width:100%;max-width:400px;}
+
+    /* Mobile brand */
+    .mob-brand{display:none;text-align:center;margin-bottom:2.5rem;}
+    @media(max-width:860px){.mob-brand{display:block;}}
+    .mob-brand-icon{
+      width:64px;height:64px;border-radius:20px;margin:0 auto .875rem;
+      background:linear-gradient(135deg,var(--blue),var(--blue-mid));
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 30px var(--blue-glow);
+    }
+    .mob-brand-icon svg{width:34px;height:34px;color:#fff;}
+    .mob-brand-name{font-size:1.6rem;font-weight:900;}
+    .mob-brand-tag{font-size:.72rem;color:var(--blue-mid);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem;}
+
+    /* QR scan card */
+    .scan-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:24px;padding:2.5rem 2rem;
+      box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(59,130,246,.06) inset;
+      text-align:center;
+    }
+    .lock-icon{
+      width:80px;height:80px;border-radius:50%;margin:0 auto 1.5rem;
+      background:linear-gradient(135deg,rgba(37,99,235,.25),rgba(59,130,246,.12));
+      border:2px solid rgba(59,130,246,.3);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 40px var(--blue-glow);
+      animation:lockPulse 3s ease-in-out infinite;
+    }
+    @keyframes lockPulse{
+      0%,100%{box-shadow:0 0 30px rgba(37,99,235,.3);}
+      50%{box-shadow:0 0 60px rgba(37,99,235,.55),0 0 100px rgba(37,99,235,.2);}
+    }
+    .lock-icon svg{width:38px;height:38px;color:var(--blue-mid);}
+
+    .scan-title{font-size:1.4rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.01em;}
+    .scan-sub{font-size:.9rem;color:var(--muted);margin-bottom:2rem;line-height:1.55;}
+
+    /* Main CTA */
+    .btn-scan{
+      display:flex;align-items:center;justify-content:center;gap:.65rem;
+      width:100%;padding:1.05rem 1.25rem;border-radius:14px;
+      background:linear-gradient(135deg,var(--blue),var(--blue-mid));
+      color:#fff;font-size:1rem;font-weight:700;cursor:pointer;
+      border:none;font-family:inherit;letter-spacing:.01em;
+      box-shadow:0 6px 24px var(--blue-glow);
+      transition:all .22s ease;text-decoration:none;
+    }
+    .btn-scan:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(37,99,235,.6);}
+    .btn-scan svg{width:20px;height:20px;flex-shrink:0;}
+
+    .divider{
+      display:flex;align-items:center;gap:.75rem;
+      color:var(--muted);font-size:.78rem;margin:1.25rem 0;
+    }
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    .btn-admin{
+      display:flex;align-items:center;justify-content:center;gap:.55rem;
+      width:100%;padding:.8rem 1.25rem;border-radius:12px;
+      background:transparent;border:1px solid var(--border);
+      color:var(--muted);font-size:.875rem;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;
+    }
+    .btn-admin:hover{background:rgba(255,255,255,.04);border-color:rgba(59,130,246,.3);color:var(--text);}
+    .btn-admin svg{width:16px;height:16px;flex-shrink:0;}
+
+    .footer-note{margin-top:1.5rem;font-size:.75rem;color:var(--muted);text-align:center;line-height:1.5;}
+    .footer-note a{color:rgba(96,165,250,.7);text-decoration:none;}
+    .footer-note a:hover{color:var(--blue-mid);}
+
+    /* Steps hint */
+    .steps{display:flex;flex-direction:column;gap:.5rem;margin:1.5rem 0;text-align:left;}
+    .step{display:flex;align-items:center;gap:.75rem;font-size:.82rem;color:var(--muted);}
+    .step-num{
+      width:24px;height:24px;border-radius:50%;flex-shrink:0;
+      background:rgba(37,99,235,.2);border:1px solid rgba(59,130,246,.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:.68rem;font-weight:800;color:var(--blue-mid);
+    }
+  </style>
+</head>
+<body>
+<div class="bg">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<div class="page">
+
+  <!-- ── Left: Brand panel ── -->
+  <div class="left">
+    <div class="brand-logo">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Oasis Pulse</div>
+        <div class="brand-tag">Attendance System</div>
+      </div>
+    </div>
+
+    <h1 class="hero-title">Smart attendance,<br/><span>secured by invitation</span></h1>
+    <p class="hero-sub">Only admin-issued QR codes grant access. Every scan is logged, every entry is tracked — built for institutions that take attendance seriously.</p>
+
+    <div class="feature-list">
+      <div class="feature">
+        <div class="feature-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/></svg>
+        </div>
+        <div class="feature-text"><strong>QR-gated access</strong> — scan with any phone or laptop camera to enter</div>
+      </div>
+      <div class="feature">
+        <div class="feature-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="feature-text"><strong>Location-aware sessions</strong> — admin sets the venue before students can clock in</div>
+      </div>
+      <div class="feature">
+        <div class="feature-dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-text"><strong>Expiring codes</strong> — each QR has a configurable lifetime and use limit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Action panel ── -->
+  <div class="right">
+    <div class="right-inner">
+
+      <!-- Mobile brand -->
+      <div class="mob-brand">
+        <div class="mob-brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="mob-brand-name">Oasis Pulse</div>
+        <div class="mob-brand-tag">Attendance System</div>
+      </div>
+
+      <div class="scan-card">
+        <div class="lock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+
+        <div class="scan-title">Access by Invitation Only</div>
+        <div class="scan-sub">You need a valid QR code from your administrator to register or sign in.</div>
+
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div>Get a QR code from your administrator</div>
+          <div class="step"><div class="step-num">2</div>Tap the button below to open your camera</div>
+          <div class="step"><div class="step-num">3</div>Point it at the QR code to gain access</div>
+        </div>
+
+        <a href="validate.html" class="btn-scan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Open Camera &amp; Scan QR Code
+        </a>
+
+        <div class="divider">admin access</div>
+
+        <a href="admin-login.html" class="btn-admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Administrator Sign In
+        </a>
+
+        <p class="footer-note">No QR code? <a href="mailto:admin@yourschool.com">Contact your administrator</a> to receive an invitation.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+  // If visitor already has a live QR session, skip the gate
+  const payload = QR_CONFIG.parseSession(sessionStorage.getItem('qr_session'));
+  if (payload) {
+    location.href = payload.redirect_to === 'login' ? 'login.html' : 'register.html';
+  }
+</script>
+</body>
+</html>
